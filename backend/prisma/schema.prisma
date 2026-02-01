@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  email     String   @unique
+  userTag   String   @unique
+  password  String
+
+  description String?
+  avatar      String?
+  dateOfBirth DateTime? @map("date_of_birth")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  posts       Post[]
+  comments    Comment[]
+  likes       Like[]
+  followersRelation Follows[] @relation("following_relation")
+  followingRelation Follows[] @relation("follower_relation")
+
+  @@map("users")
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  img       String?
+
+  authorId  String   @map("author_id")
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  comments  Comment[]
+  likes  Like[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+
+  authorId  String @map("author_id")
+  author    User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  postId    String @map("post_id")
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("comments")
+}
+
+model Follows {
+  id          String @id @default(uuid())
+
+  followerId  String @map("follower_id")
+  follower    User   @relation("follower_relation", fields: [followerId], references: [id], onDelete: Cascade)
+
+  followingId String @map("following_id")
+  following   User   @relation("following_relation", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Like {
+  id        String @id @default(uuid())
+
+  userId    String @map("user_id")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId    String @map("post_id")
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
