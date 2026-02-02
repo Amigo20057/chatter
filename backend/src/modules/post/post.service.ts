@@ -20,6 +20,20 @@ export class PostService {
 
   async getAllPosts(): Promise<Post[]> {
     return this.prismaService.post.findMany({
+      include: {
+        author: true,
+        comments: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            postView: true,
+          },
+        },
+        postView: true,
+      },
+      take: 20,
+      skip: 0,
       orderBy: { createdAt: 'desc' },
     });
   }
