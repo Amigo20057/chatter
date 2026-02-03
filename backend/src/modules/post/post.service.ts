@@ -18,11 +18,10 @@ export class PostService {
     });
   }
 
-  async getAllPosts(): Promise<Post[]> {
-    return this.prismaService.post.findMany({
+  async getAllPosts(userId: string) {
+    const posts = await this.prismaService.post.findMany({
       include: {
         author: true,
-        comments: true,
         _count: {
           select: {
             likes: true,
@@ -30,12 +29,21 @@ export class PostService {
             postView: true,
           },
         },
-        postView: true,
+        likes: {
+          where: { userId },
+          select: { id: true },
+        },
       },
       take: 20,
       skip: 0,
       orderBy: { createdAt: 'desc' },
     });
+
+    return posts.map((post) => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    }));
   }
 
   async findPostById(id: string): Promise<Post | null> {

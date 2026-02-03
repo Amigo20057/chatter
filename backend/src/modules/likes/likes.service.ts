@@ -5,20 +5,36 @@ import { PrismaService } from '../prisma/prisma.service';
 export class LikesService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async likePost(userId: string, postId: string): Promise<void> {
-    this.prismaService.like.create({
-      data: {
-        userId,
-        postId,
-      },
+  async toggleLike(userId: string, postId: string) {
+    const existingLike = await this.prismaService.like.findFirst({
+      where: { userId, postId },
     });
-  }
 
-  async unlikePost(userId: string, postId: string): Promise<void> {
-    this.prismaService.like.deleteMany({
-      where: {
-        userId,
-        postId,
+    if (existingLike) {
+      await this.prismaService.like.delete({
+        where: { id: existingLike.id },
+      });
+    } else {
+      await this.prismaService.like.create({
+        data: { userId, postId },
+      });
+    }
+
+    return this.prismaService.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            postView: true,
+          },
+        },
+        likes: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
   }

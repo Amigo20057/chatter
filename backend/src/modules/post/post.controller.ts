@@ -13,13 +13,14 @@ import { GetUserId } from '../auth/decorators/authorized.decorators';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Authorization } from '../auth/decorators/auth.decorators';
 
-@Controller('post')
+@Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @Authorization()
   @Get()
-  async getAllPosts() {
-    return this.postService.getAllPosts();
+  async getAllPosts(@GetUserId() userId: string) {
+    return this.postService.getAllPosts(userId);
   }
 
   @Get(':id')
@@ -30,6 +31,7 @@ export class PostController {
   @Authorization()
   @Post()
   async createPost(@GetUserId() userId: string, @Body() dto: CreatePostDto) {
+    console.log(userId, dto);
     return this.postService.createPost(dto, userId);
   }
 

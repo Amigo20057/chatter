@@ -20,9 +20,13 @@ export class AuthService {
   }
 
   async register(dto: CreateUserDto): Promise<{ user: User; token: string }> {
-    const userExists = await this.userService.findUserByEmail(dto.email);
-    if (userExists) {
+    const userExistsByEmail = await this.userService.findUserByEmail(dto.email);
+    const userExistsByTag = await this.userService.findUserByTag(dto.userTag);
+    if (userExistsByEmail) {
       throw new Error('User with this email already exists');
+    }
+    if (userExistsByTag) {
+      throw new Error('User with this tag already exists');
     }
     dto.password = await hash(dto.password);
     const user = await this.userService.createUser(dto);
