@@ -8,7 +8,7 @@ interface IProps {
   setIsOpenModal: (value: boolean) => void;
 }
 
-const MIN_LENGTH = 50;
+const MIN_LENGTH = 10;
 
 export default function CreatePostModal({ setIsOpenModal }: IProps) {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,21 +19,25 @@ export default function CreatePostModal({ setIsOpenModal }: IProps) {
 
   const isValid = content.length >= MIN_LENGTH;
 
-  const handleCreatePost = () => {
+  const handleCreatePost = async () => {
     if (!isValid) {
       setError(`Post must contain at least ${MIN_LENGTH} characters`);
       return;
     }
 
-    dispatch(
-      createPost({
-        content,
-        img: img ?? undefined,
-      }),
-    );
+    try {
+      await dispatch(
+        createPost({
+          content,
+          img: img ?? undefined,
+        }),
+      ).unwrap();
 
-    setError(null);
-    setIsOpenModal(false);
+      setIsOpenModal(false);
+    } catch (e) {
+      setError("Failed to create post");
+      console.error(e);
+    }
   };
 
   return (

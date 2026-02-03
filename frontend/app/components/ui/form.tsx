@@ -1,15 +1,19 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router";
+import { ERRORS } from "~/constants/errors";
 import { loginUser, registerUser } from "~/store/slices/user.slice";
 import type { AppDispatch } from "~/store/store";
 import type { IUser } from "~/types/user";
+import { formatError } from "~/utils/format-errors";
 
 interface IProps {
   type: "register" | "login";
 }
 
 export default function Form({ type }: IProps) {
+  const [error, setError] = useState<string>("");
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -21,17 +25,17 @@ export default function Form({ type }: IProps) {
   });
 
   const onSubmit = async (data: IUser) => {
-    let response;
     try {
       if (type === "register") {
-        response = await dispatch(registerUser(data));
+        await dispatch(registerUser(data)).unwrap();
       } else {
-        response = await dispatch(loginUser(data));
+        await dispatch(loginUser(data)).unwrap();
       }
+
       navigate("/");
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      console.log(`error submit data, ERROR: ${type}`, errorMessage);
+    } catch (error) {
+      console.log("FORM ERROR:", error);
+      setError(formatError(error as ERRORS));
     }
   };
 
@@ -86,6 +90,9 @@ export default function Form({ type }: IProps) {
                 {errors.userTag.message}
               </p>
             )}
+            {error && error.includes("тег") && (
+              <p className="mt-1 text-sm text-red-400">{error}</p>
+            )}
           </div>
         </div>
       )}
@@ -104,6 +111,9 @@ export default function Form({ type }: IProps) {
         />
         {errors.email && (
           <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+        )}
+        {error && error.includes("email") && (
+          <p className="mt-1 text-sm text-red-400">{error}</p>
         )}
       </div>
 
@@ -127,6 +137,9 @@ export default function Form({ type }: IProps) {
         {errors.password && (
           <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
         )}
+        {error && error.includes("пароль") && (
+          <p className="mt-1 text-sm text-red-400">{error}</p>
+        )}
       </div>
 
       <button
@@ -145,14 +158,14 @@ export default function Form({ type }: IProps) {
         {type === "register" ? (
           <>
             <span>Вже маєш акаунт?</span>{" "}
-            <Link to="/login" className="underline">
+            <Link to="/auth/login" className="underline">
               Увійти
             </Link>
           </>
         ) : (
           <>
             <span>Ще не маєш акаунту?</span>{" "}
-            <Link to="/register" className="underline">
+            <Link to="/auth/register" className="underline">
               Зареєструватися
             </Link>
           </>

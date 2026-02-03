@@ -14,5 +14,7 @@ interface IUserStateData extends Partial<IUser> {}
 
 export interface IUserInitialState {
   data: IUserStateData;
+  isAuth: boolean;
+  error?: string | null;
   status?: "idle" | "loading" | "succeeded" | "failed";
 }

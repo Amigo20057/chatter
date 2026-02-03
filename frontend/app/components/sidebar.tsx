@@ -1,5 +1,8 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { HomeIcon, UserIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "~/store/store";
+import { logoutUser } from "~/store/slices/user.slice";
 
 interface IProps {
   setIsOpenModal: (value: boolean) => void;
@@ -7,12 +10,19 @@ interface IProps {
 
 export default function Sidebar({ setIsOpenModal }: IProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const navigationLinks = [
     { name: "Home", href: "/", icon: HomeIcon },
     { name: "Profile", href: "/profile", icon: UserIcon },
     { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
   ];
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/auth/login");
+  };
 
   return (
     <aside className="w-[275px] h-screen sticky top-0 border-r border-[#2f3336] px-4 py-3 flex flex-col">
@@ -52,6 +62,20 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
           Post
         </button>
       </nav>
+
+      <button
+        onClick={handleLogout}
+        className="
+        mt-auto
+        flex items-center gap-4 px-4 py-3 rounded-full
+        transition-colors justify-center font-semibold
+        hover:bg-[#181d20]
+        border-[#2f3336] border
+        text-red-500 text-[18px]
+        "
+      >
+        Logout
+      </button>
     </aside>
   );
 }

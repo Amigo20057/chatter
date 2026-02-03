@@ -1,7 +1,10 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
-import { posts } from "~/constants/mock-posts";
+import { useOutletContext } from "react-router";
+// import { posts } from "~/constants/mock-posts";
 import Card from "~/components/card";
+import type { IMainContext } from "~/types/global";
+import type { IPost } from "~/types/post";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,7 +15,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   //add action function set filter posts - for you or following
-  // const { posts: serverPosts } = useOutletContext<IMainContext>();
+  const { posts } = useOutletContext<IMainContext>();
 
   const [activeTab, setActiveTab] = useState<"forYou" | "following">("forYou");
 
@@ -38,9 +41,11 @@ export default function Home() {
           Following
         </div>
       </div>
-      {posts.map((post) => (
-        <Card post={post} key={post.id} />
-      ))}
+      {posts ? (
+        posts.map((post) => <Card post={post as IPost} key={post.id} />)
+      ) : (
+        <div>Posts not founds</div>
+      )}
     </div>
   );
 }

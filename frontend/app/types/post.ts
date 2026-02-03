@@ -7,12 +7,13 @@ export interface IPost extends IMainEntity {
   img?: string;
   authorId: string;
   author: IUser;
-  comments: IComment[] | null;
+  comments?: IComment[] | null;
   _count: {
     likes: number;
     comments: number;
     postView: number;
   };
+  isLiked: boolean;
 }
 
 interface IPostStateData extends Partial<IPost> {}
