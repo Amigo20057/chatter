@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -23,9 +25,12 @@ export class PostController {
     return this.postService.getAllPosts(userId);
   }
 
-  @Get(':id')
-  async findPostById(@Param('id') id: string) {
-    return this.postService.findPostById(id);
+  @Get(':userTag/:postId')
+  async getPost(
+    @Param('userTag') userTag: string,
+    @Param('postId') postId: string,
+  ) {
+    return this.postService.findPost(userTag, postId);
   }
 
   @Authorization()
@@ -48,5 +53,15 @@ export class PostController {
     @Body('postId') postId: string,
   ) {
     return this.postService.deletePost(postId, userId);
+  }
+
+  @Authorization()
+  @Patch('/:postId/view')
+  @HttpCode(HttpStatus.CREATED)
+  async addViewToPost(
+    @GetUserId() userId: string,
+    @Param('postId') postId: string,
+  ) {
+    return await this.postService.addViewToPost(userId, postId);
   }
 }

@@ -1,19 +1,42 @@
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router";
 import { toggleLike } from "~/store/slices/posts.slice";
 import type { AppDispatch } from "~/store/store";
 import type { IPost } from "~/types/post";
 import { timeAgo } from "~/utils/time-ago";
+import {
+  HeartIcon,
+  ChatBubbleOvalLeftIcon,
+  EyeIcon,
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 
 export default function Card({ post }: { post: IPost }) {
+  const [isLiked, setIsLiked] = useState(post?.isLiked);
+  const [likesCount, setLikesCount] = useState(post?._count.likes);
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
-  const handleLikePost = async () => {
+  const handleLikePost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    setIsLiked((prev) => !prev);
+
     await dispatch(toggleLike(post.id));
   };
 
+  const goToPost = () => {
+    navigate(`/post/${post.author.userTag}/${post.id}`);
+  };
+
   return (
-    <div className="w-full border-b border-[#2f3336] p-4 hover:bg-[#1a1a1a] transition-colors">
-      <div className="flex gap-3">
+    <div
+      className="w-full border-b border-[#2f3336] p-4 hover:bg-[#1a1a1a] transition-colors"
+      onClick={goToPost}
+    >
+      <div className="flex gap-3  cursor-pointer">
         <div className="w-12 h-12 bg-white rounded-full flex-shrink-0"></div>
 
         <div className="flex-1">
@@ -39,68 +62,27 @@ export default function Card({ post }: { post: IPost }) {
 
           <div className="flex justify-between mt-3 max-w-[450px] text-[#68696c]">
             <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.557 0-3.015-.378-4.235-1.038L3 21l1.038-4.235C3.378 15.015 3 13.557 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
+              <ChatBubbleOvalLeftIcon className="w-5 h-5" />
               {post?._count.comments || 0}
             </button>
 
             <button
               onClick={handleLikePost}
               className={`flex items-center gap-2 transition-colors ${
-                post.isLiked
-                  ? "text-red-500"
-                  : "text-[#68696c] hover:text-red-500"
+                isLiked ? "text-red-500" : "text-[#68696c] hover:text-red-500"
               }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill={post.isLiked ? "currentColor" : "none"}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318C5.179 5.457 6.21 5 7.292 5c1.082 0 2.113.457 2.974 1.318L12 7.293l1.734-1.975C14.687 5.457 15.718 5 16.8 5c1.082 0 2.113.457 2.974 1.318 1.723 1.723 1.723 4.525 0 6.248l-9.708 9.708a.75.75 0 01-1.06 0L4.318 12.566c-1.723-1.723-1.723-4.525 0-6.248z"
-                />
-              </svg>
-
-              {post._count.likes}
+              {isLiked ? (
+                <HeartSolidIcon className="w-5 h-5" />
+              ) : (
+                <HeartIcon className="w-5 h-5" />
+              )}
+              {likesCount}
             </button>
 
             <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              {post._count.postView || 0}
+              <EyeIcon className="w-5 h-5" />
+              {post?._count.postView || 0}
             </div>
           </div>
         </div>

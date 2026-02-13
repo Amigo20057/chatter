@@ -25,12 +25,15 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
   };
 
   return (
-    <aside className="w-[275px] h-screen sticky top-0 border-r border-[#2f3336] px-4 py-3 flex flex-col">
+    <aside className="w-[275px] h-screen sticky top-0  border-[#2f3336] px-4 py-3 flex flex-col">
       <div className="mb-6 px-3 text-xl font-bold">Chatter</div>
 
       <nav className="flex flex-col gap-1 overflow-y-auto">
         {navigationLinks.map((link) => {
-          const isActive = location.pathname.startsWith(link.href);
+          const isActive =
+            link.href === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(link.href);
           const Icon = link.icon;
 
           return (

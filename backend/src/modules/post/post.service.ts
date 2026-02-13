@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from 'generated/prisma/client';
@@ -8,14 +8,34 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createPost(dto: CreatePostDto, authorId: string): Promise<Post> {
-    return this.prismaService.post.create({
+  async createPost(dto: CreatePostDto, authorId: string) {
+    const newPost = await this.prismaService.post.create({
       data: {
         content: dto.content,
         img: dto.img,
         authorId,
       },
     });
+
+    const post = await this.prismaService.post.findUnique({
+      where: { id: newPost.id },
+      include: {
+        author: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            postView: true,
+          },
+        },
+        likes: {
+          where: { userId: authorId },
+          select: { id: true },
+        },
+      },
+    });
+
+    return { ...post, isLiked: post.likes.length > 0, likes: undefined };
   }
 
   async getAllPosts(userId: string) {
@@ -50,6 +70,40 @@ export class PostService {
     return this.prismaService.post.findUnique({ where: { id } });
   }
 
+  async findPost(userTag: string, postId: string) {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            postView: true,
+          },
+        },
+        likes: {
+          where: {
+            user: {
+              userTag: userTag,
+            },
+          },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.author.userTag !== userTag) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return { ...post, isLiked: post.likes.length > 0, likes: undefined };
+  }
+
   async deletePost(postId: string, authorId: string): Promise<void> {
     const post = await this.findPostById(postId);
     if (!post) {
@@ -75,6 +129,26 @@ export class PostService {
         content: dto.content ?? post.content,
         img: dto.img ?? post.img,
       },
+    });
+  }
+
+  async addViewToPost(userId: string, postId: string): Promise<number> {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    await this.prismaService.postView.createMany({
+      data: [{ postId, userId }],
+      skipDuplicates: true,
+    });
+
+    return this.prismaService.postView.count({
+      where: { postId },
     });
   }
 }

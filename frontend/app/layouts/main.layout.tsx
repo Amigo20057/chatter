@@ -11,26 +11,31 @@ import type { AppDispatch, RootState } from "~/store/store";
 import type { IMainContext } from "~/types/global";
 
 export default function MainLayout() {
-  const appDispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
   const user = useSelector((state: RootState) => state.user.data);
   const userStatus = useSelector((state: RootState) => state.user.status);
   const isAuth = useSelector((state: RootState) => state.user.isAuth);
-  const posts = useSelector((state: RootState) => state.posts.data);
-  const postStatus = useSelector((state: RootState) => state.posts.status);
-  const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-  const navigate = useNavigate();
+
+  const posts = useSelector((state: RootState) => state.posts.posts);
+  const postListStatus = useSelector(
+    (state: RootState) => state.posts.listStatus,
+  );
+
+  const [isOpenModal, setIsOpenModal] = useState(false);
 
   useEffect(() => {
     if (userStatus === "idle") {
-      appDispatch(profile());
+      dispatch(profile());
     }
-  }, [appDispatch, userStatus]);
+  }, [dispatch, userStatus]);
 
   useEffect(() => {
-    if (postStatus === "idle") {
-      appDispatch(getPosts());
+    if (postListStatus === "idle") {
+      dispatch(getPosts());
     }
-  }, [appDispatch, postStatus]);
+  }, [dispatch, postListStatus]);
 
   useEffect(() => {
     if (userStatus === "failed" && !isAuth) {
@@ -38,16 +43,14 @@ export default function MainLayout() {
     }
   }, [userStatus, isAuth, navigate]);
 
-  if (userStatus === "loading" || postStatus === "loading") {
+  if (userStatus === "loading" || postListStatus === "loading") {
     return <LoaderScreen />;
   }
 
   const context: IMainContext = {
     user: userStatus === "succeeded" ? user : undefined,
-    posts: postStatus === "succeeded" ? posts : undefined,
+    posts: postListStatus === "succeeded" ? posts : undefined,
   };
-
-  console.log("Context:", userStatus);
 
   return (
     <div className="w-full min-h-screen bg-black text-white flex justify-center">
@@ -57,6 +60,7 @@ export default function MainLayout() {
         <main className="flex-1 min-h-screen">
           <Outlet context={context} />
         </main>
+
         <Infobar />
       </div>
 

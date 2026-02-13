@@ -24,7 +24,6 @@ model User {
   posts       Post[]
   comments    Comment[]
   likes       Like[]
-  postView    PostView[]
   followersRelation Follows[] @relation("following_relation")
   followingRelation Follows[] @relation("follower_relation")
 
@@ -96,16 +95,13 @@ model Like {
 }
 
 model PostView {
-  id        String   @id @default(uuid())
+  id     String @id @default(uuid())
+  postId String
+  userId String
 
-  userId    String?  @map("user_id")  
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  postId    String   @map("post_id")
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@unique([postId, userId])
 
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("post_views")
-  @@unique([userId, postId]) 
+  @@map("posts_views")
 }

@@ -2,6 +2,8 @@ import type { IComment } from "./comment";
 import type { IMainEntity } from "./global";
 import type { IUser } from "./user";
 
+type Status = "idle" | "loading" | "succeeded" | "failed";
+
 export interface IPost extends IMainEntity {
   content: string;
   img?: string;
@@ -19,8 +21,11 @@ export interface IPost extends IMainEntity {
 interface IPostStateData extends Partial<IPost> {}
 
 export interface IPostInitialState {
-  data: IPostStateData[];
-  status?: "idle" | "loading" | "succeeded" | "failed";
+  posts: IPostStateData[];
+  post?: IPost | null;
+  listStatus?: Status;
+  actionStatus?: Status;
+  postStatus?: Status;
 }
 
 export interface IPostCreate {

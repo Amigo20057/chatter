@@ -20,7 +20,7 @@ export class LikesService {
       });
     }
 
-    return this.prismaService.post.findUnique({
+    const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       include: {
         author: true,
@@ -37,6 +37,8 @@ export class LikesService {
         },
       },
     });
+
+    return { ...post, isLiked: post.likes.length > 0, likes: undefined };
   }
 
   async getLikesCount(postId: string): Promise<number> {
