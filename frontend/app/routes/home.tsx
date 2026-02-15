@@ -1,5 +1,5 @@
 import type { Route } from "./+types/home";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useOutletContext } from "react-router";
 import Card from "~/components/card";
 import type { IMainContext } from "~/types/global";

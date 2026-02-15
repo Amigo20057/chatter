@@ -38,32 +38,29 @@ export class PostService {
     return { ...post, isLiked: post.likes.length > 0, likes: undefined };
   }
 
-  async getAllPosts(userId: string) {
+  async getAllPosts(userId: string, cursor?: string, limit: number = 20) {
     const posts = await this.prismaService.post.findMany({
       include: {
         author: true,
         _count: {
-          select: {
-            likes: true,
-            comments: true,
-            postView: true,
-          },
+          select: { likes: true, comments: true, postView: true },
         },
-        likes: {
-          where: { userId },
-          select: { id: true },
-        },
+        likes: { where: { userId }, select: { id: true } },
       },
-      take: 20,
-      skip: 0,
+      take: limit,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
       orderBy: { createdAt: 'desc' },
     });
 
-    return posts.map((post) => ({
-      ...post,
-      isLiked: post.likes.length > 0,
-      likes: undefined,
-    }));
+    return {
+      posts: posts.map((p) => ({
+        ...p,
+        isLiked: p.likes.length > 0,
+        likes: undefined,
+      })),
+      nextCursor: posts.length ? posts[posts.length - 1].id : null,
+    };
   }
 
   async findPostById(id: string): Promise<Post | null> {

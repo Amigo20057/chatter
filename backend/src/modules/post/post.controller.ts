@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -21,10 +22,14 @@ export class PostController {
 
   @Authorization()
   @Get()
-  async getAllPosts(@GetUserId() userId: string) {
-    return this.postService.getAllPosts(userId);
+  async getAllPosts(
+    @GetUserId() userId: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = limit ? parseInt(limit, 10) : 20;
+    return this.postService.getAllPosts(userId, cursor, parsedLimit);
   }
-
   @Get(':userTag/:postId')
   async getPost(
     @Param('userTag') userTag: string,
