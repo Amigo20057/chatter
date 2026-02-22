@@ -49,9 +49,9 @@ export default function Card({ post }: { post: IPost }) {
               · {timeAgo(new Date(post.createdAt))}
             </span>
           </div>
-
-          <div className="mt-1 text-white text-base">{post.content}</div>
-
+          <div className="mt-1 text-white text-base break-all overflow-hidden">
+            {post.content}
+          </div>
           {post.img && (
             <img
               src={post.img}

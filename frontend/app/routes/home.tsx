@@ -1,49 +1,66 @@
-import type { Route } from "./+types/home";
-import { useRef, useState } from "react";
-import { useOutletContext } from "react-router";
+import { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Card from "~/components/card";
-import type { IMainContext } from "~/types/global";
+import { getPosts } from "~/store/slices/posts.slice";
+import type { AppDispatch, RootState } from "~/store/store";
 import type { IPost } from "~/types/post";
 
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Chatter" },
-    { name: "description", content: "Welcome to chatter!" },
-  ];
-}
-
 export default function Home() {
-  //add action function set filter posts - for you or following
-  const { posts } = useOutletContext<IMainContext>();
+  const dispatch = useDispatch<AppDispatch>();
+  const posts = useSelector((state: RootState) => state.posts.posts);
+  const nextCursor = useSelector((state: RootState) => state.posts.nextCursor);
+  const hasMore = useSelector((state: RootState) => state.posts.hasMore);
+  const isFetchingMore = useSelector(
+    (state: RootState) => state.posts.isFetchingMore,
+  );
+  const listStatus = useSelector((state: RootState) => state.posts.listStatus);
 
-  const [activeTab, setActiveTab] = useState<"forYou" | "following">("forYou");
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const tabClass = (tab: "forYou" | "following") =>
-    `w-1/2 flex justify-center items-center cursor-pointer
-     hover:bg-[#181d20] transition-colors
-     ${activeTab === tab ? "text-white border-b-2 border-blue-500" : "text-[#71767b]"}`;
+  useEffect(() => {
+    if (listStatus === "idle") {
+      dispatch(getPosts());
+    }
+  }, [dispatch, listStatus]);
+
+  useEffect(() => {
+    const currentLoader = loaderRef.current;
+    if (!currentLoader || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          dispatch(getPosts({ cursor: nextCursor! }));
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(currentLoader);
+
+    return () => {
+      observer.unobserve(currentLoader);
+    };
+  }, [dispatch, hasMore, isFetchingMore, nextCursor]);
+
+  if (listStatus === "loading") {
+    return <div className="p-6 text-center">Loading...</div>;
+  }
+
+  if (!posts.length) {
+    return <div className="p-6 text-center">No posts yet</div>;
+  }
 
   return (
     <div className="w-150 border-r border-l border-[#2f3336] min-h-screen">
-      <div className="w-full h-[50px] flex border-b border-[#2f3336] sticky top-0 backdrop-blur-md bg-black/50 z-10">
-        <div
-          className={tabClass("forYou")}
-          onClick={() => setActiveTab("forYou")}
-        >
-          For you
-        </div>
+      {posts.map((post) => (
+        <Card post={post as IPost} key={post.id} />
+      ))}
 
-        <div
-          className={tabClass("following")}
-          onClick={() => setActiveTab("following")}
-        >
-          Following
+      {hasMore && (
+        <div ref={loaderRef} className="p-6 text-center text-gray-400">
+          {isFetchingMore ? "Loading more..." : "Scroll to load more"}
         </div>
-      </div>
-      {posts ? (
-        posts.map((post: IPost) => <Card post={post as IPost} key={post.id} />)
-      ) : (
-        <div>Posts not founds</div>
       )}
     </div>
   );

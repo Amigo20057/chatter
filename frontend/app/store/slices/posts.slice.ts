@@ -2,11 +2,15 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import type { IPost, IPostCreate, IPostInitialState } from "~/types/post";
 
-export const getPosts = createAsyncThunk("post/getPosts", async () => {
+export const getPosts = createAsyncThunk<
+  { posts: IPost[]; nextCursor: string | null },
+  { cursor?: string } | undefined
+>("post/getPosts", async (params) => {
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/posts`, {
+    params: { cursor: params?.cursor, limit: 10 },
     withCredentials: true,
   });
-  return response.data as IPost[];
+  return response.data;
 });
 
 export const getPost = createAsyncThunk(
@@ -46,12 +50,11 @@ export const toggleLike = createAsyncThunk<IPost, string>(
       null,
       { withCredentials: true },
     );
-
     return response.data;
   },
 );
 
-export const addViewToPost = createAsyncThunk<IPost, string>(
+export const addViewToPost = createAsyncThunk<number, string>(
   "post/view",
   async (postId) => {
     const response = await axios.patch(
@@ -59,100 +62,110 @@ export const addViewToPost = createAsyncThunk<IPost, string>(
       null,
       { withCredentials: true },
     );
-
     return response.data;
   },
 );
 
-const initialState: IPostInitialState = {
+interface ExtendedPostState extends IPostInitialState {
+  nextCursor: string | null;
+  hasMore: boolean;
+  isFetchingMore: boolean;
+}
+
+const initialState: ExtendedPostState = {
   posts: [],
   post: null,
   listStatus: "idle",
   actionStatus: "idle",
   postStatus: "idle",
+  nextCursor: null,
+  hasMore: true,
+  isFetchingMore: false,
 };
 
 export const postSlice = createSlice({
   name: "posts",
   initialState,
-  reducers: {},
+  reducers: {
+    resetPosts(state) {
+      state.posts = [];
+      state.nextCursor = null;
+      state.hasMore = true;
+      state.listStatus = "idle";
+    },
+    resetPost(state) {
+      state.post = null;
+      state.postStatus = "idle";
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(getPosts.pending, (state) => {
-        state.listStatus = "loading";
+      .addCase(getPosts.pending, (state, action) => {
+        if (action.meta.arg?.cursor) {
+          state.isFetchingMore = true;
+        } else {
+          state.listStatus = "loading";
+        }
       })
       .addCase(getPosts.fulfilled, (state, action) => {
+        const { posts, nextCursor } = action.payload;
+        if (action.meta.arg?.cursor) {
+          state.posts.push(...posts);
+        } else {
+          state.posts = posts;
+        }
+        state.nextCursor = nextCursor;
+        state.hasMore = !!nextCursor;
+        state.isFetchingMore = false;
         state.listStatus = "succeeded";
-        state.posts = action.payload;
       })
       .addCase(getPosts.rejected, (state) => {
+        state.isFetchingMore = false;
         state.listStatus = "failed";
       })
-
-      .addCase(createPost.pending, (state) => {
-        state.actionStatus = "loading";
-      })
-      .addCase(createPost.fulfilled, (state, action) => {
-        state.actionStatus = "succeeded";
-        state.posts.unshift(action.payload);
-      })
-      .addCase(createPost.rejected, (state) => {
-        state.actionStatus = "failed";
-      })
-
+      // getPost
       .addCase(getPost.pending, (state) => {
         state.postStatus = "loading";
       })
       .addCase(getPost.fulfilled, (state, action) => {
-        state.postStatus = "succeeded";
         state.post = action.payload;
+        state.postStatus = "succeeded";
       })
       .addCase(getPost.rejected, (state) => {
         state.postStatus = "failed";
       })
-
-      .addCase(toggleLike.pending, (state) => {
+      // createPost
+      .addCase(createPost.pending, (state) => {
         state.actionStatus = "loading";
       })
-      .addCase(toggleLike.fulfilled, (state, action) => {
+      .addCase(createPost.fulfilled, (state, action) => {
+        state.posts.unshift(action.payload);
         state.actionStatus = "succeeded";
-
+      })
+      .addCase(createPost.rejected, (state) => {
+        state.actionStatus = "failed";
+      })
+      // toggleLike
+      .addCase(toggleLike.fulfilled, (state, action) => {
         const index = state.posts.findIndex(
           (post) => post.id === action.payload.id,
         );
-
         if (index !== -1) {
           state.posts[index] = action.payload;
         }
+        if (state.post?.id === action.payload.id) {
+          state.post = action.payload;
+        }
       })
-      .addCase(toggleLike.rejected, (state) => {
-        state.actionStatus = "failed";
-      })
-
-      .addCase(addViewToPost.pending, (state) => {
-        state.actionStatus = "loading";
-      })
+      // addViewToPost
       .addCase(addViewToPost.fulfilled, (state, action) => {
-        state.actionStatus = "succeeded";
-
-        const updatedPost = action.payload;
-
-        if (state.post && state.post.id === updatedPost.id) {
-          state.post = updatedPost;
+        // action.payload это число просмотров
+        if (state.post) {
+          state.post._count.postView = action.payload;
         }
-
-        const index = state.posts.findIndex(
-          (post) => post.id === updatedPost.id,
-        );
-
-        if (index !== -1) {
-          state.posts[index] = updatedPost;
-        }
-      })
-      .addCase(addViewToPost.rejected, (state) => {
-        state.actionStatus = "failed";
       });
   },
 });
 
+export const { resetPosts, resetPost } = postSlice.actions;
 export default postSlice.reducer;

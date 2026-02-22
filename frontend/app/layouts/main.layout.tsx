@@ -5,7 +5,6 @@ import Infobar from "~/components/infobar";
 import Sidebar from "~/components/sidebar";
 import CreatePostModal from "~/components/ui/create-post.modal";
 import LoaderScreen from "~/components/ui/loader-screen";
-import { getPosts } from "~/store/slices/posts.slice";
 import { profile } from "~/store/slices/user.slice";
 import type { AppDispatch, RootState } from "~/store/store";
 import type { IMainContext } from "~/types/global";
@@ -32,18 +31,12 @@ export default function MainLayout() {
   }, [dispatch, userStatus]);
 
   useEffect(() => {
-    if (postListStatus === "idle") {
-      dispatch(getPosts());
-    }
-  }, [dispatch, postListStatus]);
-
-  useEffect(() => {
     if (userStatus === "failed" && !isAuth) {
       navigate("/auth/login");
     }
   }, [userStatus, isAuth, navigate]);
 
-  if (userStatus === "loading" || postListStatus === "loading") {
+  if (userStatus === "loading") {
     return <LoaderScreen />;
   }
 

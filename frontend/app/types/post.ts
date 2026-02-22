@@ -26,6 +26,8 @@ export interface IPostInitialState {
   listStatus?: Status;
   actionStatus?: Status;
   postStatus?: Status;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 export interface IPostCreate {
