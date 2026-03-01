@@ -3,51 +3,54 @@ import axios from "axios";
 import type { IUser, IUserInitialState } from "~/types/user";
 
 export const registerUser = createAsyncThunk<
-  IUser,
+  void,
   Partial<IUser>,
   { rejectValue: string }
->("user/register", async (userData, { rejectWithValue }) => {
+>("user/register", async (userData, { rejectWithValue, dispatch }) => {
   try {
-    const response = await axios.post(
+    await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/register`,
       userData,
-      {
-        withCredentials: true,
-      },
+      { withCredentials: true },
     );
-    return response.data;
+    await dispatch(profile()).unwrap();
   } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Login failed");
+    return rejectWithValue(
+      error.response?.data?.message || "Registration failed",
+    );
   }
 });
 
 export const loginUser = createAsyncThunk<
-  IUser,
+  void,
   Partial<IUser>,
   { rejectValue: string }
->("user/login", async (userData, { rejectWithValue }) => {
+>("user/login", async (userData, { rejectWithValue, dispatch }) => {
   try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/login`,
-      userData,
-      { withCredentials: true },
-    );
-
-    return response.data;
+    await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, userData, {
+      withCredentials: true,
+    });
+    await dispatch(profile()).unwrap();
   } catch (error: any) {
     return rejectWithValue(error.response?.data?.message || "Login failed");
   }
 });
 
-export const profile = createAsyncThunk("user/profile", async () => {
-  const response = await axios.get(
-    `${import.meta.env.VITE_API_URL}/users/profile`,
-    {
-      withCredentials: true,
-    },
-  );
-  return (await response.data) as IUser;
-});
+export const profile = createAsyncThunk<IUser, void, { rejectValue: string }>(
+  "user/profile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/users/me`,
+        { withCredentials: true },
+      );
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Unauthorized");
+    }
+  },
+);
 
 export const logoutUser = createAsyncThunk("user/logout", async () => {
   await axios.delete(`${import.meta.env.VITE_API_URL}/auth/logout`, {
@@ -55,22 +58,26 @@ export const logoutUser = createAsyncThunk("user/logout", async () => {
   });
 });
 
-const updateUser = createAsyncThunk(
-  "user/update",
-  async (userData: Omit<Partial<IUser>, "id" | "createdAt" | "updatedAt">) => {
+export const updateUser = createAsyncThunk<
+  IUser,
+  Omit<Partial<IUser>, "id" | "createdAt" | "updatedAt">,
+  { rejectValue: string }
+>("user/update", async (userData, { rejectWithValue }) => {
+  try {
     const response = await axios.patch(
       `${import.meta.env.VITE_API_URL}/users/update`,
       userData,
-      {
-        withCredentials: true,
-      },
+      { withCredentials: true },
     );
-    return (await response.data) as IUser;
-  },
-);
+
+    return response.data as IUser;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Update failed");
+  }
+});
 
 const initialState: IUserInitialState = {
-  data: {},
+  data: null,
   isAuth: false,
   status: "idle",
   error: null,
@@ -82,45 +89,31 @@ export const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      //REGISTER
+
       .addCase(registerUser.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.data = action.payload;
+      .addCase(registerUser.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload ?? "Unknown error";
+        state.error = action.payload ?? "Registration failed";
       })
 
-      //LOGIN
       .addCase(loginUser.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.data = action.payload;
+      .addCase(loginUser.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload ?? "Unknown error";
+        state.error = action.payload ?? "Login failed";
       })
 
-      //LOGOUT
-      .addCase(logoutUser.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(logoutUser.fulfilled, (state, action) => {
-        state.data = {};
-        state.status = "succeeded";
-      })
-      .addCase(logoutUser.rejected, (state, action) => {
-        state.status = "failed";
-      })
-
-      //PROFILE
       .addCase(profile.pending, (state) => {
         state.status = "loading";
       })
@@ -131,16 +124,18 @@ export const userSlice = createSlice({
         state.error = null;
       })
       .addCase(profile.rejected, (state, action) => {
-        state.data = {};
+        state.data = null;
         state.status = "failed";
         state.isAuth = false;
-        state.error =
-          action.error.message === "Unauthorized"
-            ? "Unauthorized"
-            : action.error.message;
+        state.error = action.payload ?? "Unauthorized";
       })
 
-      //UPDATE
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.data = null;
+        state.isAuth = false;
+        state.status = "idle";
+      })
+
       .addCase(updateUser.pending, (state) => {
         state.status = "loading";
       })
@@ -148,8 +143,9 @@ export const userSlice = createSlice({
         state.data = action.payload;
         state.status = "succeeded";
       })
-      .addCase(updateUser.rejected, (state) => {
+      .addCase(updateUser.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload ?? "Update failed";
       });
   },
 });

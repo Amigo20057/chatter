@@ -7,11 +7,24 @@ import { FollowsModule } from './modules/follows/follows.module';
 import { LikesModule } from './modules/likes/likes.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    MulterModule.register({
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+
+          callback(null, uniqueName + extname(file.originalname));
+        },
+      }),
     }),
     PrismaModule,
     AuthModule,

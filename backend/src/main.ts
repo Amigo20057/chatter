@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +22,11 @@ async function bootstrap() {
     }),
   );
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   app.enableCors({
     origin: configService.get<string>('CLIENT_URL'),
@@ -47,6 +52,8 @@ async function bootstrap() {
       'x-timestamp',
     ],
   });
+
+  app.use('/uploads', express.static('uploads'));
 
   await app.listen(port);
   console.log(`Server running on http://localhost:${port}`);

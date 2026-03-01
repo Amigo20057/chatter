@@ -32,5 +32,5 @@ export interface IPostInitialState {
 
 export interface IPostCreate {
   content: string;
-  img?: string;
+  file?: File;
 }

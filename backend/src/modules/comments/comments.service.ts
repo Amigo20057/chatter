@@ -11,11 +11,15 @@ export class CommentsService {
     userId: string,
     content: string,
   ): Promise<Comment> {
+    console.log(content);
     return this.prismaService.comment.create({
       data: {
         postId,
         content,
         authorId: userId,
+      },
+      include: {
+        author: true,
       },
     });
   }

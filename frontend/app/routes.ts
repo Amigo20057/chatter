@@ -4,6 +4,7 @@ export default [
   route("/", "layouts/main.layout.tsx", [
     index("routes/home.tsx"),
     route("post/:userTag/:postId", "routes/post.tsx"),
+    route("profile/:userTag", "routes/profile.tsx"),
   ]),
   route("/auth", "layouts/auth.layout.tsx", [
     route("login", "routes/login.tsx"),

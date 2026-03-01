@@ -42,7 +42,7 @@ export class AuthService {
     if (!data.email && !data.userTag) {
       throw new Error('Email or UserTag must be provided');
     }
-    let userExists: User | null = null;
+    let userExists = null;
     if (data.userTag) {
       userExists = await this.userService.findUserByTag(data.userTag);
     }

@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from 'generated/prisma/client';
 import { UpdatePostDto } from './dto/update-post.dto';
 
@@ -8,11 +7,17 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createPost(dto: CreatePostDto, authorId: string) {
+  async createPost(
+    content: string,
+    file: Express.Multer.File | undefined,
+    authorId: string,
+  ) {
+    const imagePath = file ? `/uploads/${file.filename}` : null;
+
     const newPost = await this.prismaService.post.create({
       data: {
-        content: dto.content,
-        img: dto.img,
+        content,
+        img: imagePath,
         authorId,
       },
     });
@@ -35,7 +40,11 @@ export class PostService {
       },
     });
 
-    return { ...post, isLiked: post.likes.length > 0, likes: undefined };
+    return {
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    };
   }
 
   async getAllPosts(userId: string, cursor?: string, limit: number = 20) {
@@ -86,6 +95,15 @@ export class PostService {
             },
           },
           select: { id: true },
+        },
+        comments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          select: {
+            author: true,
+            content: true,
+          },
         },
       },
     });

@@ -9,6 +9,7 @@ import {
   HeartIcon,
   ChatBubbleOvalLeftIcon,
   EyeIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 
@@ -37,7 +38,8 @@ export default function Card({ post }: { post: IPost }) {
       onClick={goToPost}
     >
       <div className="flex gap-3  cursor-pointer">
-        <div className="w-12 h-12 bg-white rounded-full flex-shrink-0"></div>
+        {/* <div className="w-12 h-12 bg-white rounded-full flex-shrink-0"></div> */}
+        <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover" />
 
         <div className="flex-1">
           <div className="flex items-center gap-2 text-sm">
@@ -52,13 +54,15 @@ export default function Card({ post }: { post: IPost }) {
           <div className="mt-1 text-white text-base break-all overflow-hidden">
             {post.content}
           </div>
-          {post.img && (
-            <img
-              src={post.img}
-              alt="post image"
-              className="mt-3 rounded-xl max-h-[500px] object-cover"
-            />
-          )}
+          <div className="flex justify-center w-full">
+            {post.img && (
+              <img
+                src={`${import.meta.env.VITE_API_URL}` + post.img}
+                alt="post image"
+                className="mt-3 rounded-xl max-h-[500px] object-cover"
+              />
+            )}
+          </div>
 
           <div className="flex justify-between mt-3 max-w-[450px] text-[#68696c]">
             <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
@@ -73,9 +77,9 @@ export default function Card({ post }: { post: IPost }) {
               }`}
             >
               {isLiked ? (
-                <HeartSolidIcon className="w-5 h-5" />
+                <HeartSolidIcon className="w-5 text-pink-500" />
               ) : (
-                <HeartIcon className="w-5 h-5" />
+                <HeartIcon className="w-5" />
               )}
               {likesCount}
             </button>

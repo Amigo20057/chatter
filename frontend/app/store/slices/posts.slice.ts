@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import type { IComment } from "~/types/comment";
 import type { IPost, IPostCreate, IPostInitialState } from "~/types/post";
 
 export const getPosts = createAsyncThunk<
@@ -28,11 +29,21 @@ export const getPost = createAsyncThunk(
 
 export const createPost = createAsyncThunk<IPost, IPostCreate>(
   "post/create",
-  async (data, { rejectWithValue }) => {
+  async (
+    { content, file }: { content: string; file?: File },
+    { rejectWithValue },
+  ) => {
     try {
+      const formData = new FormData();
+      formData.append("content", content);
+
+      if (file) {
+        formData.append("file", file);
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/posts`,
-        data,
+        formData,
         { withCredentials: true },
       );
       return response.data;
@@ -65,6 +76,22 @@ export const addViewToPost = createAsyncThunk<number, string>(
     return response.data;
   },
 );
+
+export const createComment = createAsyncThunk<
+  IComment,
+  { postId: string; content: string }
+>("post/create-comment", async ({ postId, content }, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/comments/${postId}/`,
+      { content },
+      { withCredentials: true },
+    );
+    return response.data;
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data || "Create comment failed");
+  }
+});
 
 interface ExtendedPostState extends IPostInitialState {
   nextCursor: string | null;
@@ -123,7 +150,6 @@ export const postSlice = createSlice({
         state.isFetchingMore = false;
         state.listStatus = "failed";
       })
-      // getPost
       .addCase(getPost.pending, (state) => {
         state.postStatus = "loading";
       })
@@ -134,7 +160,6 @@ export const postSlice = createSlice({
       .addCase(getPost.rejected, (state) => {
         state.postStatus = "failed";
       })
-      // createPost
       .addCase(createPost.pending, (state) => {
         state.actionStatus = "loading";
       })
@@ -145,7 +170,6 @@ export const postSlice = createSlice({
       .addCase(createPost.rejected, (state) => {
         state.actionStatus = "failed";
       })
-      // toggleLike
       .addCase(toggleLike.fulfilled, (state, action) => {
         const index = state.posts.findIndex(
           (post) => post.id === action.payload.id,
@@ -157,12 +181,39 @@ export const postSlice = createSlice({
           state.post = action.payload;
         }
       })
-      // addViewToPost
       .addCase(addViewToPost.fulfilled, (state, action) => {
-        // action.payload это число просмотров
         if (state.post) {
           state.post._count.postView = action.payload;
         }
+      })
+
+      .addCase(createComment.pending, (state) => {
+        state.actionStatus = "loading";
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        state.actionStatus = "succeeded";
+
+        if (!state.post) return;
+
+        if (!state.post.comments) {
+          state.post.comments = [];
+        }
+
+        state.post.comments.push(action.payload);
+        state.post._count.comments += 1;
+
+        const postIndex = state.posts.findIndex((p) => p.id === state.post?.id);
+
+        if (postIndex !== -1) {
+          const post = state.posts[postIndex];
+
+          if (post._count) {
+            post._count.comments += 1;
+          }
+        }
+      })
+      .addCase(createComment.rejected, (state) => {
+        state.actionStatus = "failed";
       });
   },
 });

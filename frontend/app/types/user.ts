@@ -8,12 +8,15 @@ export interface IUser extends IMainEntity {
   description?: string;
   avatar?: string;
   dateOfBirth?: string;
+  postsCount: number;
+  followersCount: number;
+  followingCount: number;
 }
 
 interface IUserStateData extends Partial<IUser> {}
 
 export interface IUserInitialState {
-  data: IUserStateData;
+  data: IUserStateData | null;
   isAuth: boolean;
   error?: string | null;
   status?: "idle" | "loading" | "succeeded" | "failed";

@@ -11,14 +11,10 @@ export class CommentsController {
   @Post('/:postId')
   async createComment(
     @Param('postId') postId: string,
-    @Body('content') data: { content: string },
+    @Body('content') content: string,
     @GetUserId() userId: string,
   ) {
-    return await this.commentsService.createComment(
-      postId,
-      userId,
-      data.content,
-    );
+    return await this.commentsService.createComment(postId, userId, content);
   }
 
   @Authorization()

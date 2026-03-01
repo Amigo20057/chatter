@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { HomeIcon, UserIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "~/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "~/store/store";
 import { logoutUser } from "~/store/slices/user.slice";
 
 interface IProps {
@@ -12,10 +12,13 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const userTag = useSelector((state: RootState) => state.user.data?.userTag);
 
   const navigationLinks = [
     { name: "Home", href: "/", icon: HomeIcon },
-    { name: "Profile", href: "/profile", icon: UserIcon },
+    ...(userTag
+      ? [{ name: "Profile", href: `/profile/${userTag}`, icon: UserIcon }]
+      : []),
     { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
   ];
 

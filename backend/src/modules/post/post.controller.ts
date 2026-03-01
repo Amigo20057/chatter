@@ -9,12 +9,16 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import { CreatePostDto } from './dto/create-post.dto';
 import { GetUserId } from '../auth/decorators/authorized.decorators';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Authorization } from '../auth/decorators/auth.decorators';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('posts')
 export class PostController {
@@ -30,6 +34,7 @@ export class PostController {
     const parsedLimit = limit ? parseInt(limit, 10) : 20;
     return this.postService.getAllPosts(userId, cursor, parsedLimit);
   }
+
   @Get(':userTag/:postId')
   async getPost(
     @Param('userTag') userTag: string,
@@ -40,9 +45,24 @@ export class PostController {
 
   @Authorization()
   @Post()
-  async createPost(@GetUserId() userId: string, @Body() dto: CreatePostDto) {
-    console.log(userId, dto);
-    return this.postService.createPost(dto, userId);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+
+          callback(null, uniqueName + extname(file.originalname));
+        },
+      }),
+    }),
+  )
+  async createPost(
+    @GetUserId() userId: string,
+    @UploadedFile() file,
+    @Body('content') content: string,
+  ) {
+    return this.postService.createPost(content, file, userId);
   }
 
   @Authorization()
