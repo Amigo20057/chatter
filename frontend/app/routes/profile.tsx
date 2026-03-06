@@ -1,14 +1,26 @@
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router";
+import Card from "~/components/card";
+import { followUser, unFollow } from "~/store/slices/user.slice";
+import type { AppDispatch, RootState } from "~/store/store";
+import type { IPost } from "~/types/post";
 import type { IUser } from "~/types/user";
 
 export default function Profile() {
   const { userTag } = useParams();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [user, setUser] = useState<IUser | null>(null);
+  const myUserTag = useSelector((state: RootState) => state.user.data?.userTag);
+  const [posts, setPosts] = useState<IPost[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(false);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
+  const [isNotFoundPosts, setIsNotFoundPosts] = useState<boolean>(false);
+  const isMyProfile = myUserTag === userTag;
 
   useEffect(() => {
     if (!userTag) return;
@@ -38,10 +50,80 @@ export default function Profile() {
       }
     };
 
+    const fetchPosts = async () => {
+      try {
+        setIsLoadingPosts(true);
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/posts/my/${userTag}`,
+          { withCredentials: true },
+        );
+
+        if (!response.data) {
+          setIsNotFoundPosts(true);
+        } else {
+          setPosts(response.data.posts);
+        }
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          setIsNotFoundPosts(true);
+        } else {
+          console.error(error);
+        }
+      } finally {
+        setIsLoadingPosts(false);
+      }
+    };
+
     fetchProfile();
+    fetchPosts();
   }, [userTag]);
 
-  if (isLoading) {
+  const handleFollow = async () => {
+    if (!user) return;
+
+    try {
+      await dispatch(followUser(user.id)).unwrap();
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              isFollow: true,
+              followersCount: (prev.followersCount ?? 0) + 1,
+            }
+          : prev,
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!user) return;
+
+    try {
+      await dispatch(unFollow(user.id)).unwrap();
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              isFollow: false,
+              followersCount: (prev.followersCount ?? 1) - 1,
+            }
+          : prev,
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const goToSettings = () => {
+    navigate("/settings");
+  };
+
+  if (isLoading || isLoadingPosts) {
     return (
       <div className="w-full h-40 flex items-center justify-center text-gray-400">
         Loading profile...
@@ -57,6 +139,43 @@ export default function Profile() {
     );
   }
 
+  const renderBtn = () => {
+    if (isMyProfile) {
+      return (
+        <button
+          onClick={goToSettings}
+          className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
+        >
+          Edit profile
+        </button>
+      );
+    }
+
+    if (!user?.isFollow) {
+      return (
+        <button
+          onClick={handleFollow}
+          className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
+        >
+          Follow
+        </button>
+      );
+    }
+
+    if (user?.isFollow) {
+      return (
+        <button
+          onClick={handleUnfollow}
+          className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
+        >
+          Unfollow
+        </button>
+      );
+    }
+
+    return null;
+  };
+
   if (!user) return null;
 
   return (
@@ -70,14 +189,12 @@ export default function Profile() {
 
       <div className="relative px-4">
         <div className="absolute -top-16">
-          <UserCircleIcon className="w-32 h-32 object-cover" />
+          <div className="relative group ">
+            <UserCircleIcon className="w-32 h-32 text-gray-500 bg-black rounded-full border-4 border-black" />
+          </div>
         </div>
 
-        <div className="flex justify-end mt-3">
-          <button className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition">
-            Edit profile
-          </button>
-        </div>
+        <div className="flex justify-end mt-3">{renderBtn()}</div>
       </div>
 
       <div className="px-4 mt-6">
@@ -112,7 +229,8 @@ export default function Profile() {
 
       <div>
         <div className="p-4 border-b border-neutral-800 text-gray-500">
-          User posts will appear here
+          {posts &&
+            posts.map((post) => <Card post={post as IPost} key={post.id} />)}
         </div>
       </div>
     </div>

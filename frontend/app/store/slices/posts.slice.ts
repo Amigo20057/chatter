@@ -5,10 +5,10 @@ import type { IPost, IPostCreate, IPostInitialState } from "~/types/post";
 
 export const getPosts = createAsyncThunk<
   { posts: IPost[]; nextCursor: string | null },
-  { cursor?: string } | undefined
+  { cursor?: string; search?: string } | undefined
 >("post/getPosts", async (params) => {
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/posts`, {
-    params: { cursor: params?.cursor, limit: 10 },
+    params: { cursor: params?.cursor, limit: 10, search: params?.search },
     withCredentials: true,
   });
   return response.data;
@@ -92,6 +92,27 @@ export const createComment = createAsyncThunk<
     return rejectWithValue(err.response?.data || "Create comment failed");
   }
 });
+
+export const removePost = createAsyncThunk(
+  "post/remove-post",
+  async (postId: string) => {
+    await axios.delete(`${import.meta.env.VITE_API_URL}/posts/${postId}`, {
+      withCredentials: true,
+    });
+  },
+);
+
+export const removeComment = createAsyncThunk(
+  "post/remove-comment",
+  async (commentId: string) => {
+    await axios.delete(
+      `${import.meta.env.VITE_API_URL}/comments/${commentId}`,
+      {
+        withCredentials: true,
+      },
+    );
+  },
+);
 
 interface ExtendedPostState extends IPostInitialState {
   nextCursor: string | null;
@@ -214,6 +235,37 @@ export const postSlice = createSlice({
       })
       .addCase(createComment.rejected, (state) => {
         state.actionStatus = "failed";
+      })
+
+      .addCase(removePost.fulfilled, (state, action) => {
+        const deletedPostId = action.meta.arg;
+
+        state.posts = state.posts.filter((post) => post.id !== deletedPostId);
+
+        if (state.post?.id === deletedPostId) {
+          state.post = null;
+          state.postStatus = "idle";
+        }
+      })
+
+      .addCase(removeComment.fulfilled, (state, action) => {
+        const deletedCommentId = action.meta.arg;
+
+        if (!state.post?.comments) return;
+
+        state.post.comments = state.post.comments.filter(
+          (comment) => comment.id !== deletedCommentId,
+        );
+
+        if (state.post._count?.comments > 0) {
+          state.post._count.comments -= 1;
+        }
+
+        const postIndex = state.posts.findIndex((p) => p.id === state.post?.id);
+
+        if (postIndex !== -1 && state.posts[postIndex]._count) {
+          state.posts[postIndex]._count.comments -= 1;
+        }
       });
   },
 });

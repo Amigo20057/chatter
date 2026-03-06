@@ -32,18 +32,26 @@ export default function Card({ post }: { post: IPost }) {
     navigate(`/post/${post.author.userTag}/${post.id}`);
   };
 
+  const goToProfile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    navigate(`/profile/${post.author.userTag}`);
+  };
+
   return (
     <div
       className="w-full border-b border-[#2f3336] p-4 hover:bg-[#1a1a1a] transition-colors"
       onClick={goToPost}
     >
       <div className="flex gap-3  cursor-pointer">
-        {/* <div className="w-12 h-12 bg-white rounded-full flex-shrink-0"></div> */}
-        <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover" />
+        <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover text-gray-500 bg-black " />
 
         <div className="flex-1">
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-white">
+            <span
+              className="font-semibold text-white hover:underline"
+              onClick={goToProfile}
+            >
               {post.author.fullName}
             </span>
             <span className="text-[#68696c]">@{post.author.userTag}</span>

@@ -11,6 +11,7 @@ export interface IUser extends IMainEntity {
   postsCount: number;
   followersCount: number;
   followingCount: number;
+  isFollow?: boolean;
 }
 
 interface IUserStateData extends Partial<IUser> {}

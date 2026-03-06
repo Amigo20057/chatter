@@ -3,10 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { User } from 'generated/prisma/client';
 import { CreateUserDto } from '../auth/dto/create-user.dto';
 import { UpdatedUserDto } from './dto/updated-user.dto';
+import { FollowsService } from '../follows/follows.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly followService: FollowsService,
+  ) {}
 
   async findUserByEmail(email: string): Promise<User | null> {
     return this.prismaService.user.findUnique({ where: { email } });
@@ -36,6 +40,7 @@ export class UserService {
       description: user.description,
       email: user.email,
       createdAt: user.createdAt,
+      dateOfBirth: user.dateOfBirth,
 
       postsCount: user._count.posts,
       followersCount: user._count.followersRelation,
@@ -43,7 +48,8 @@ export class UserService {
     };
   }
 
-  async findUserByTag(userTag: string) {
+  async findUserByTag(userTag: string, userId?: string) {
+    let isFollowExists = false;
     const user = await this.prismaService.user.findUnique({
       where: { userTag },
       include: {
@@ -59,6 +65,10 @@ export class UserService {
 
     if (!user) return null;
 
+    if (userId) {
+      isFollowExists = await this.followService.isFollowExists(userId, user.id);
+    }
+
     return {
       id: user.id,
       fullName: user.fullName,
@@ -67,6 +77,8 @@ export class UserService {
       description: user.description,
       email: user.email,
       createdAt: user.createdAt,
+      dateOfBirth: user.dateOfBirth,
+      isFollow: isFollowExists,
 
       postsCount: user._count.posts,
       followersCount: user._count.followersRelation,

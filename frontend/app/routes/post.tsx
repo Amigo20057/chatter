@@ -5,6 +5,9 @@ import {
   addViewToPost,
   createComment,
   getPost,
+  removeComment,
+  removePost,
+  toggleLike,
 } from "~/store/slices/posts.slice";
 import type { AppDispatch, RootState } from "~/store/store";
 import {
@@ -12,6 +15,7 @@ import {
   HeartIcon,
   ArrowLeftIcon,
   UserCircleIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import LoaderScreen from "~/components/ui/loader-screen";
@@ -23,19 +27,30 @@ export default function PostPage() {
   const navigate = useNavigate();
   const post = useSelector((state: RootState) => state.posts.post);
   const postStatus = useSelector((state: RootState) => state.posts.postStatus);
+  const user = useSelector((state: RootState) => state.user.data);
   const hasViewed = useRef(false);
   const [firstName = "", lastName = ""] =
     post?.author.fullName?.split(" ") ?? [];
-  const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const content = useDebounce<string>(commentText, 500);
+  const content = useDebounce<string>(commentText, 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [isMyPost, setIsMyPost] = useState(false);
+  const [isMyComment, setIsMyComment] = useState(false);
 
   useEffect(() => {
     if (post) {
       setIsLiked(post.isLiked);
+      setLikesCount(post._count.likes);
     }
   }, [post]);
+
+  useEffect(() => {
+    if (post && user) {
+      setIsMyPost(post.author.userTag === user.userTag);
+    }
+  }, [post, user]);
 
   useEffect(() => {
     if (userTag && postId) {
@@ -62,8 +77,21 @@ export default function PostPage() {
     return <div className="p-4">Post not found</div>;
   }
 
+  const handleLikePost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    setIsLiked((prev) => !prev);
+
+    await dispatch(toggleLike(post.id));
+  };
+
   const goToBack = () => {
     navigate(-1);
+  };
+
+  const goToProfile = () => {
+    navigate(`/profile/${post.author.userTag}`);
   };
 
   const handleSubmitComment = async () => {
@@ -74,6 +102,8 @@ export default function PostPage() {
 
       if (!postId) return;
 
+      console.log(content);
+
       dispatch(createComment({ postId, content }));
 
       setCommentText("");
@@ -81,6 +111,31 @@ export default function PostPage() {
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!post) return;
+
+    const confirmDelete = confirm("Delete this post?");
+    if (!confirmDelete) return;
+
+    try {
+      await dispatch(removePost(post.id)).unwrap();
+      navigate(-1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    const confirmDelete = confirm("Delete this comment?");
+    if (!confirmDelete) return;
+
+    try {
+      await dispatch(removeComment(commentId)).unwrap();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -97,28 +152,32 @@ export default function PostPage() {
 
       <div className="p-4 border-b border-[#2f3336]">
         <div className="flex">
-          {/* <img
-            src={post.author.avatar}
-            alt="avatar"
-            className="w-12 h-12 rounded-full mr-3 object-cover"
-          /> */}
-
-          <UserCircleIcon className="w-12 h-12 mr-3 object-cover" />
+          <UserCircleIcon className="w-12 h-12 rounded-full mr-3 object-cover text-gray-500 bg-black " />
 
           <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <span className="font-semibold hover:underline cursor-pointer">
-                {firstName} {lastName}
-              </span>
-              <span className="text-gray-500">@{post.author.userTag}</span>
-              <span className="text-gray-500">·</span>
-              <span className="text-gray-500 text-sm">
-                {new Date(post.createdAt).toLocaleDateString()}
-              </span>
-            </div>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center space-x-2">
+                <span
+                  className="font-semibold hover:underline cursor-pointer"
+                  onClick={goToProfile}
+                >
+                  {firstName} {lastName}
+                </span>
 
-            <div className="mt-3 text-[15px] whitespace-pre-wrap break-words break-all">
-              {post.content}
+                <span className="text-gray-500">@{post.author.userTag}</span>
+                <span className="text-gray-500">·</span>
+
+                <span className="text-gray-500 text-sm">
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+
+              {isMyPost && (
+                <TrashIcon
+                  onClick={handleDeletePost}
+                  className="w-5 h-5 text-gray-500 hover:text-red-500 cursor-pointer transition"
+                />
+              )}
             </div>
 
             <div className="flex justify-center w-full">
@@ -144,24 +203,24 @@ export default function PostPage() {
           <span>{post._count.comments}</span>
         </button>
 
-        <button className="flex items-center space-x-2 hover:text-pink-500 transition">
+        <button
+          disabled={postStatus !== "succeeded"}
+          onClick={handleLikePost}
+          className={`flex items-center gap-2 transition-colors ${
+            isLiked ? "text-pink-500" : "text-[#68696c] hover:text-pink-500"
+          }`}
+        >
           {isLiked ? (
             <HeartSolidIcon className="w-5 text-pink-500" />
           ) : (
             <HeartIcon className="w-5" />
           )}
-          <span>{post._count.likes}</span>
+          <span>{likesCount}</span>
         </button>
       </div>
 
       <div className="flex p-4 border-b border-[#2f3336]">
-        {/* <img
-          src={"/avatar-placeholder.png"}
-          alt="avatar"
-          className="w-10 h-10 rounded-full mr-3 object-cover"
-        /> */}
-
-        <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover" />
+        <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover text-gray-500 bg-black " />
 
         <div className="flex-1">
           <textarea
@@ -203,23 +262,29 @@ export default function PostPage() {
               key={comment.id}
               className="flex mb-4 border-b border-[#2f3336] pb-3"
             >
-              {/* <img
-                src={"/avatar-placeholder.png"}
-                className="w-10 h-10 rounded-full mr-3"
-              /> */}
+              <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover text-gray-500 bg-black " />
 
-              <UserCircleIcon className="w-10 h-10 rounded-full mr-3 object-cover" />
+              <div className="flex flex-1 flex-col">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold">
+                      {comment.author.fullName}
+                    </span>
 
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-semibold">
-                    {comment.author.fullName}
-                  </span>
-                  <span className="text-gray-500 text-sm">
-                    @{comment.author.userTag}
-                  </span>
+                    <span className="text-gray-500 text-sm">
+                      @{comment.author.userTag}
+                    </span>
+                  </div>
+
+                  {comment.author.userTag === user?.userTag && (
+                    <TrashIcon
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="w-4 h-4 text-gray-500 hover:text-red-500 cursor-pointer transition"
+                    />
+                  )}
                 </div>
-                <p className="text-sm mt-1">{comment.content}</p>
+
+                <p className="text-sm mt-1 break-words">{comment.content}</p>
               </div>
             </div>
           ))

@@ -1,9 +1,19 @@
+import { useState } from "react";
+import { useDebounce } from "~/hooks/useDebounce";
+
 export function Search() {
+  const [value, setValue] = useState("");
+  const debounceText = useDebounce(value, 500);
+
+  console.log(debounceText);
+
   return (
     <div className="relative">
       <input
         type="text"
         placeholder="Search"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
         className="
               w-full px-4 py-3 pl-12 rounded-full
               bg-dark border border-[#2f3336] text-white text-[15px]

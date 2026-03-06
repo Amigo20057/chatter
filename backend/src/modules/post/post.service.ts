@@ -39,11 +39,35 @@ export class PostService {
         },
       },
     });
-
     return {
       ...post,
       isLiked: post.likes.length > 0,
       likes: undefined,
+    };
+  }
+
+  async getAllMyPosts(userId: string, userTag: string) {
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        author: {
+          userTag,
+        },
+      },
+      include: {
+        author: true,
+        _count: {
+          select: { likes: true, comments: true, postView: true },
+        },
+        likes: { where: { userId }, select: { id: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return {
+      posts: posts.map((p) => ({
+        ...p,
+        isLiked: p.likes.length > 0,
+        likes: undefined,
+      })),
     };
   }
 
@@ -76,7 +100,7 @@ export class PostService {
     return this.prismaService.post.findUnique({ where: { id } });
   }
 
-  async findPost(userTag: string, postId: string) {
+  async findPost(currentUserId: string, userTag: string, postId: string) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
       include: {
@@ -89,18 +113,13 @@ export class PostService {
           },
         },
         likes: {
-          where: {
-            user: {
-              userTag: userTag,
-            },
-          },
+          where: { userId: currentUserId },
           select: { id: true },
         },
         comments: {
-          orderBy: {
-            createdAt: 'desc',
-          },
+          orderBy: { createdAt: 'desc' },
           select: {
+            id: true,
             author: true,
             content: true,
           },
@@ -108,15 +127,15 @@ export class PostService {
       },
     });
 
-    if (!post) {
+    if (!post || post.author.userTag !== userTag) {
       throw new NotFoundException('Post not found');
     }
 
-    if (post.author.userTag !== userTag) {
-      throw new NotFoundException('Post not found');
-    }
-
-    return { ...post, isLiked: post.likes.length > 0, likes: undefined };
+    return {
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined,
+    };
   }
 
   async deletePost(postId: string, authorId: string): Promise<void> {

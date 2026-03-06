@@ -6,7 +6,7 @@ export class UpdatedUserDto {
   @Matches(/^[A-Za-zА-Яа-яЇїІіЄєҐґ]+ [A-Za-zА-Яа-яЇїІіЄєҐґ]+$/, {
     message: 'Full name must contain exactly two words',
   })
-  fullname?: string;
+  fullName?: string;
 
   @IsOptional()
   @IsString()
@@ -17,4 +17,8 @@ export class UpdatedUserDto {
     message: 'Date of birth must be in format YYYY-MM-DD',
   })
   dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
 }

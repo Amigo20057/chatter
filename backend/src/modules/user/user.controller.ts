@@ -16,8 +16,11 @@ export class UserController {
 
   @Authorization()
   @Get('profile/:userTag')
-  async profileByUserTag(@Param('userTag') userTag: string) {
-    return this.userService.findUserByTag(userTag);
+  async profileByUserTag(
+    @Param('userTag') userTag: string,
+    @GetUserId() userId: string,
+  ) {
+    return this.userService.findUserByTag(userTag, userId);
   }
 
   @Authorization()

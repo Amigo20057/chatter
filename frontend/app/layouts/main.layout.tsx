@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router";
-import Infobar from "~/components/infobar";
 import Sidebar from "~/components/sidebar";
 import CreatePostModal from "~/components/ui/create-post.modal";
 import LoaderScreen from "~/components/ui/loader-screen";
@@ -54,7 +53,7 @@ export default function MainLayout() {
           <Outlet context={context} />
         </main>
 
-        <Infobar />
+        {/* <Infobar /> */}
       </div>
 
       {isOpenModal && <CreatePostModal setIsOpenModal={setIsOpenModal} />}

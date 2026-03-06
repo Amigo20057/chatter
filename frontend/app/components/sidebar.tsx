@@ -33,25 +33,27 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
 
       <nav className="flex flex-col gap-1 overflow-y-auto">
         {navigationLinks.map((link) => {
-          const isActive =
-            link.href === "/"
-              ? location.pathname === "/"
-              : location.pathname.startsWith(link.href);
           const Icon = link.icon;
+
+          let isActive = false;
+
+          if (link.href === "/") {
+            isActive = location.pathname === "/";
+          } else if (link.name === "Profile" && userTag) {
+            isActive = location.pathname === `/profile/${userTag}`;
+          } else {
+            isActive = location.pathname.startsWith(link.href);
+          }
 
           return (
             <Link
               key={link.name}
               to={link.href}
               className={`
-                flex items-center gap-4 px-4 py-3 rounded-full
-                transition-colors
-                hover:bg-[#181d20]
-                ${
-                  isActive
-                    ? "font-bold text-white bg-[#181d20]"
-                    : "text-[#e7e9ea]"
-                }
+              flex items-center gap-4 px-4 py-3 rounded-full
+              transition-colors
+              hover:bg-[#181d20]
+              ${isActive ? "font-bold text-white bg-[#181d20]" : "text-[#e7e9ea]"}
               `}
             >
               <Icon className="w-6 h-6" />

@@ -25,6 +25,15 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Authorization()
+  @Get('my/:userTag')
+  async getAllMyPosts(
+    @GetUserId() userId: string,
+    @Param('userTag') userTag: string,
+  ) {
+    return this.postService.getAllMyPosts(userId, userTag);
+  }
+
+  @Authorization()
   @Get()
   async getAllPosts(
     @GetUserId() userId: string,
@@ -35,12 +44,14 @@ export class PostController {
     return this.postService.getAllPosts(userId, cursor, parsedLimit);
   }
 
+  @Authorization()
   @Get(':userTag/:postId')
   async getPost(
+    @GetUserId() userId: string,
     @Param('userTag') userTag: string,
     @Param('postId') postId: string,
   ) {
-    return this.postService.findPost(userTag, postId);
+    return this.postService.findPost(userId, userTag, postId);
   }
 
   @Authorization()
@@ -72,10 +83,10 @@ export class PostController {
   }
 
   @Authorization()
-  @Delete()
+  @Delete('/:postId')
   async deletePost(
     @GetUserId() userId: string,
-    @Body('postId') postId: string,
+    @Param('postId') postId: string,
   ) {
     return this.postService.deletePost(postId, userId);
   }

@@ -76,6 +76,28 @@ export const updateUser = createAsyncThunk<
   }
 });
 
+export const followUser = createAsyncThunk<void, string>(
+  "user/follow",
+  async (userId) => {
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/follows/follow/${userId}`,
+      null,
+      { withCredentials: true },
+    );
+  },
+);
+
+export const unFollow = createAsyncThunk<void, string>(
+  "user/follow",
+  async (userId) => {
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/follows/unfollow/${userId}`,
+      null,
+      { withCredentials: true },
+    );
+  },
+);
+
 const initialState: IUserInitialState = {
   data: null,
   isAuth: false,
