@@ -18,8 +18,6 @@ export class FollowsService {
       },
     });
 
-    console.log(isExists);
-
     return !!isExists;
   }
 

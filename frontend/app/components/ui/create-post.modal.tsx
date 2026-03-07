@@ -90,7 +90,6 @@ export default function CreatePostModal({ setIsOpenModal }: IProps) {
   return (
     <div className="fixed inset-0 z-50 bg-[#5b708366] flex justify-center items-start pt-20">
       <div className="w-[600px] bg-black rounded-2xl shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#2f3336]">
           <button
             onClick={() => setIsOpenModal(false)}
@@ -100,7 +99,6 @@ export default function CreatePostModal({ setIsOpenModal }: IProps) {
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex gap-4 px-4 py-4">
           <div className="w-10 h-10 bg-white rounded-full flex-shrink-0" />
 
@@ -143,7 +141,6 @@ export default function CreatePostModal({ setIsOpenModal }: IProps) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-[#2f3336]">
           <div className="flex gap-3 text-blue-500">
             <Icon>
@@ -175,7 +172,7 @@ export default function CreatePostModal({ setIsOpenModal }: IProps) {
               }
             `}
           >
-            Post
+            Створити
           </button>
         </div>
       </div>

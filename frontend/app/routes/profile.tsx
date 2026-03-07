@@ -146,7 +146,7 @@ export default function Profile() {
           onClick={goToSettings}
           className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
         >
-          Edit profile
+          Редагувати профіль
         </button>
       );
     }
@@ -157,7 +157,7 @@ export default function Profile() {
           onClick={handleFollow}
           className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
         >
-          Follow
+          Підписатися
         </button>
       );
     }
@@ -168,7 +168,7 @@ export default function Profile() {
           onClick={handleUnfollow}
           className="border border-gray-500 px-4 py-1.5 rounded-full font-semibold hover:bg-neutral-900 transition"
         >
-          Unfollow
+          Відписатися
         </button>
       );
     }
@@ -182,7 +182,7 @@ export default function Profile() {
     <div className="w-full max-w-[600px] border-x border-neutral-800 min-h-screen">
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur border-b border-neutral-800 px-4 py-3">
         <h2 className="text-xl font-bold">{user.fullName}</h2>
-        <p className="text-sm text-gray-500">{user.postsCount ?? 0} posts</p>
+        <p className="text-sm text-gray-500">{user.postsCount ?? 0} постів</p>
       </div>
 
       <div className="w-full h-48 bg-[#333639] relative"></div>
@@ -210,20 +210,20 @@ export default function Profile() {
             <span className="font-bold text-white">
               {user.followingCount ?? 0}
             </span>{" "}
-            <span className="text-gray-500">Following</span>
+            <span className="text-gray-500">Підписки</span>
           </span>
           <span>
             <span className="font-bold text-white">
               {user.followersCount ?? 0}
             </span>{" "}
-            <span className="text-gray-500">Followers</span>
+            <span className="text-gray-500">Підписники</span>
           </span>
         </div>
       </div>
 
       <div className="mt-6 border-b border-neutral-800 flex">
         <button className="flex-1 py-3 font-semibold hover:bg-neutral-900 transition border-b-2 border-white">
-          Posts
+          Пости
         </button>
       </div>
 

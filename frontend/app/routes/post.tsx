@@ -191,7 +191,7 @@ export default function PostPage() {
             </div>
 
             <div className="mt-4 text-gray-500 text-sm">
-              {post._count.postView} Views
+              {post._count.postView} Перглядів
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function PostPage() {
           <textarea
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Post your reply"
+            placeholder="Опублікуйте свою відповідь"
             rows={3}
             className="w-full bg-transparent resize-none outline-none text-[15px] placeholder:text-gray-500"
           />
@@ -249,7 +249,7 @@ export default function PostPage() {
           }
         `}
             >
-              {isSubmitting ? "Replying..." : "Reply"}
+              {isSubmitting ? "Опубліковування..." : "Опублікувати"}
             </button>
           </div>
         </div>
@@ -289,7 +289,7 @@ export default function PostPage() {
             </div>
           ))
         ) : (
-          <div className="text-gray-500 text-sm">No comments yet</div>
+          <div className="text-gray-500 text-sm">Немає коментарів</div>
         )}
       </div>
     </div>

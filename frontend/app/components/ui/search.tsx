@@ -5,8 +5,6 @@ export function Search() {
   const [value, setValue] = useState("");
   const debounceText = useDebounce(value, 500);
 
-  console.log(debounceText);
-
   return (
     <div className="relative">
       <input

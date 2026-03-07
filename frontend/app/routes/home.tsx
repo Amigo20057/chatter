@@ -43,11 +43,11 @@ export default function Home() {
     };
   }, [dispatch, hasMore, isFetchingMore, nextCursor]);
 
-  if (listStatus === "loading") {
+  if (listStatus === "loading" || listStatus === "idle") {
     return <div className="p-6 text-center">Loading...</div>;
   }
 
-  if (!posts.length) {
+  if (listStatus === "succeeded" && !posts.length) {
     return <div className="p-6 text-center">No posts yet</div>;
   }
 

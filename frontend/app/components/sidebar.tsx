@@ -15,11 +15,11 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
   const userTag = useSelector((state: RootState) => state.user.data?.userTag);
 
   const navigationLinks = [
-    { name: "Home", href: "/", icon: HomeIcon },
+    { name: "Головна", href: "/", icon: HomeIcon },
     ...(userTag
-      ? [{ name: "Profile", href: `/profile/${userTag}`, icon: UserIcon }]
+      ? [{ name: "Профіль", href: `/profile/${userTag}`, icon: UserIcon }]
       : []),
-    { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
+    { name: "Налаштування", href: "/settings", icon: Cog6ToothIcon },
   ];
 
   const handleLogout = async () => {
@@ -67,7 +67,7 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
                 transition-colors justify-center font-semibold mt-5
                 hover:bg-[#c5c5c5] bg-white text-black text-[18px]"
         >
-          Post
+          Створити Пост
         </button>
       </nav>
 
@@ -82,7 +82,7 @@ export default function Sidebar({ setIsOpenModal }: IProps) {
         text-red-500 text-[18px]
         "
       >
-        Logout
+        Вийти
       </button>
     </aside>
   );

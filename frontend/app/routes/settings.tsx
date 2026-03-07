@@ -43,12 +43,12 @@ export default function Settings() {
   return (
     <div className="w-full max-w-[600px] border-x border-neutral-800 min-h-screen">
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Edit profile</h2>
+        <h2 className="text-xl font-bold">Редагувати профіль</h2>
         <button
           onClick={handleSubmit}
           className="bg-white text-black px-4 py-1.5 rounded-full font-semibold hover:opacity-90 transition"
         >
-          Save
+          Зберегти
         </button>
       </div>
 
@@ -60,18 +60,15 @@ export default function Settings() {
 
       <div className="relative px-4">
         <div className="absolute -top-16">
-          <div className="relative group cursor-pointer">
+          <div className="relative group ">
             <UserCircleIcon className="w-32 h-32 text-gray-500 bg-black rounded-full border-4 border-black" />
-            <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs">
-              Change
-            </div>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="px-4 mt-20 flex flex-col gap-6">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-500 mb-1">Name</label>
+          <label className="text-sm text-gray-500 mb-1">Ім`я</label>
           <input
             type="text"
             name="fullName"
@@ -83,7 +80,7 @@ export default function Settings() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-500 mb-1">Bio</label>
+          <label className="text-sm text-gray-500 mb-1">БІО</label>
           <textarea
             name="description"
             value={form.description}
@@ -98,7 +95,7 @@ export default function Settings() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-500 mb-1">Date of birth</label>
+          <label className="text-sm text-gray-500 mb-1">Дата народження</label>
           <input
             type="date"
             name="dateOfBirth"
@@ -112,7 +109,7 @@ export default function Settings() {
           type="submit"
           className="bg-white text-black px-4 py-2 rounded-full font-semibold hover:opacity-90 transition mt-2"
         >
-          Save changes
+          Зберегти зміни
         </button>
       </form>
     </div>
