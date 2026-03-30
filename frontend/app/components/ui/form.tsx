@@ -57,8 +57,9 @@ export default function Form({ type }: IProps) {
                   message: "Мінімум 3 символи",
                 },
                 pattern: {
-                  value: /^[a-zA-Z]+ [a-zA-Z]+$/,
-                  message: "Введіть два слова, дозволені лише літери",
+                  value:
+                    /^[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ'’-]+ [a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ'’-]+$/,
+                  message: "Введіть два слова (укр, ру або англ літери)",
                 },
               })}
             />
