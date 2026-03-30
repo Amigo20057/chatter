@@ -59,7 +59,7 @@ export default function Form({ type }: IProps) {
                 pattern: {
                   value:
                     /^[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ'’-]+ [a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ'’-]+$/,
-                  message: "Введіть два слова (укр, ру або англ літери)",
+                  message: "Введіть два слова",
                 },
               })}
             />
