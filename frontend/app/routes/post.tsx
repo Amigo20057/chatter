@@ -180,6 +180,10 @@ export default function PostPage() {
               )}
             </div>
 
+            <div className="mt-1 text-white text-base break-all overflow-hidden">
+              {post.content}
+            </div>
+
             <div className="flex justify-center w-full">
               {post.img && (
                 <img
